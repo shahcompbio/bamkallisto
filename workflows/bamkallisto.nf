@@ -48,15 +48,20 @@ workflow BAMKALLISTO {
     // Prepare index channel (KALLISTO_QUANT expects tuple for index)
     //
     ch_index = channel.empty()
-    if (!params.transcripts_index) {
-        // extract cdna
-        GFFREAD(tuple([id: "cdna"], params.gtf), params.genome_fasta)
-        // index
-        KALLISTO_INDEX(GFFREAD.out.gffread_fasta)
+    if (params.transcripts_index) {
+        // Use pre-built kallisto index
+        ch_index = Channel.value([[:], file(params.transcripts_index)])
+    }
+    else if (params.transcripts_fasta) {
+        // Build index from transcriptome FASTA
+        KALLISTO_INDEX([[:], file(params.transcripts_fasta)])
         ch_index = KALLISTO_INDEX.out.index
     }
     else {
-        ch_index = channel.value([[:], file(params.transcripts_index)])
+        // Extract cDNA from GTF + genome FASTA, then index
+        GFFREAD([[id: "cdna"], file(params.gtf)], file(params.genome_fasta))
+        KALLISTO_INDEX(GFFREAD.out.gffread_fasta)
+        ch_index = KALLISTO_INDEX.out.index
     }
     //
     // Quantify with kallisto

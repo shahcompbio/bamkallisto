@@ -1,0 +1,2 @@
+sample,transcriptome_bam
+WT_REP1,https://raw.githubusercontent.com/nf-core/test-datasets/rnaseq/testdata/GSE110004/WT_REP1.Aligned.toTranscriptome.out.bam

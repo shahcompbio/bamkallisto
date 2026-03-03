@@ -276,6 +276,10 @@
         "genome_fasta": {
             "type": "string",
             "description": "if you need to build transcriptome index, path to ref genome fasta to extract cDNA fasta"
+        },
+        "transcripts_fasta": {
+            "type": "string",
+            "description": "if you need to build transcriptome index, and already have cDNA fasta"
         }
     }
 }
