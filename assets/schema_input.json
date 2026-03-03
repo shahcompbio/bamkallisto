@@ -13,14 +13,14 @@
                 "errorMessage": "Sample name must be provided and cannot contain spaces",
                 "meta": ["id"]
             },
-            "bam": {
+            "transcriptome_bam": {
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.bam$",
-                "errorMessage": "BAM file must be provided, cannot contain spaces and must have extension '.bam'"
+                "errorMessage": "transcriptome aligned BAM file must be provided, cannot contain spaces and must have extension '.bam'"
             }
         },
-        "required": ["sample", "bam"]
+        "required": ["sample", "transcriptome_bam"]
     }
 }

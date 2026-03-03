@@ -3,8 +3,10 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { SAMTOOLS_BAM2FQ        } from '../modules/nf-core/samtools/bam2fq/main'
+include { SAMTOOLS_COLLATEFASTQ  } from '../modules/nf-core/samtools/collatefastq/main'
 include { FASTQC                 } from '../modules/nf-core/fastqc/main'
+include { GFFREAD                } from '../modules/nf-core/gffread/main'
+include { KALLISTO_INDEX         } from '../modules/nf-core/kallisto/index/main'
 include { KALLISTO_QUANT         } from '../modules/nf-core/kallisto/quant/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
@@ -30,32 +32,37 @@ workflow BAMKALLISTO {
     //
     // Convert BAM to paired-end FASTQ
     //
-    SAMTOOLS_BAM2FQ(ch_samplesheet, true)
-
-    // Filter to only paired-end reads (exclude _other.fq.gz and _singleton.fq.gz)
-    ch_reads = SAMTOOLS_BAM2FQ.out.reads.map { meta, reads ->
-        def paired = reads.findAll { it.name =~ /_(1|2)\.fq\.gz$/ }
-        return [meta, paired]
-    }
-
-    ch_versions = ch_versions.mix(SAMTOOLS_BAM2FQ.out.versions_samtools.first())
+    SAMTOOLS_COLLATEFASTQ(
+        ch_samplesheet,
+        [[:], [], []],
+        false,
+    )
     //
     // MODULE: Run FastQC
     //
-    FASTQC(ch_reads)
+    FASTQC(SAMTOOLS_COLLATEFASTQ.out.fastq)
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect { it[1] })
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
 
     //
     // Prepare index channel (KALLISTO_QUANT expects tuple for index)
     //
-    ch_index = Channel.value([[:], file(params.transcripts_index)])
-
+    ch_index = channel.empty()
+    if (!params.transcripts_index) {
+        // extract cdna
+        GFFREAD(tuple([id: "cdna"], params.gtf), params.genome_fasta)
+        // index
+        KALLISTO_INDEX(GFFREAD.out.gffread_fasta)
+        ch_index = KALLISTO_INDEX.out.index
+    }
+    else {
+        ch_index = channel.value([[:], file(params.transcripts_index)])
+    }
     //
     // Quantify with kallisto
     //
     KALLISTO_QUANT(
-        ch_reads,
+        SAMTOOLS_COLLATEFASTQ.out.fastq,
         ch_index,
         [],
         [],
