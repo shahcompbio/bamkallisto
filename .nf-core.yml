@@ -8,6 +8,7 @@ lint:
   nextflow_config: false
   nf_test_content: false
   rocrate_readme_sync: false
+  included_configs: False
   actions_ci: false
   files_unchanged:
     - .github/workflows/ci.yml

@@ -280,6 +280,10 @@
         "transcripts_fasta": {
             "type": "string",
             "description": "if you need to build transcriptome index, and already have cDNA fasta"
+        },
+        "skip_fastqc": {
+            "type": "boolean",
+            "description": "skip fastqc"
         }
     }
 }
