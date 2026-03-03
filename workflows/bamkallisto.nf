@@ -3,14 +3,14 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { SAMTOOLS_BAM2FQ           } from '../modules/nf-core/samtools/bam2fq/main'
-include { FASTQC                    } from '../modules/nf-core/fastqc/main'
-include { QUANTIFY_PSEUDO_ALIGNMENT } from '../subworkflows/nf-core/quantify_pseudo_alignment/main'
-include { MULTIQC                   } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap          } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText    } from '../subworkflows/local/utils_nfcore_bamkallisto_pipeline'
+include { SAMTOOLS_BAM2FQ        } from '../modules/nf-core/samtools/bam2fq/main'
+include { FASTQC                 } from '../modules/nf-core/fastqc/main'
+include { KALLISTO_QUANT         } from '../modules/nf-core/kallisto/quant/main'
+include { MULTIQC                } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap       } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_bamkallisto_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -26,33 +26,43 @@ workflow BAMKALLISTO {
 
     ch_versions = channel.empty()
     ch_multiqc_files = channel.empty()
-    // convert bam to fastq
-    SAMTOOLS_BAM2FQ(ch_samplesheet, "TRUE")
+
+    //
+    // Convert BAM to paired-end FASTQ
+    //
+    SAMTOOLS_BAM2FQ(ch_samplesheet, true)
+
+    // Filter to only paired-end reads (exclude _other.fq.gz and _singleton.fq.gz)
+    ch_reads = SAMTOOLS_BAM2FQ.out.reads.map { meta, reads ->
+        def paired = reads.findAll { it.name =~ /_(1|2)\.fq\.gz$/ }
+        return [meta, paired]
+    }
+
+    ch_versions = ch_versions.mix(SAMTOOLS_BAM2FQ.out.versions_samtools.first())
     //
     // MODULE: Run FastQC
     //
-    FASTQC(
-        SAMTOOLS_BAM2FQ.out.reads
-    )
+    FASTQC(ch_reads)
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect { it[1] })
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
-    // run kallisto
-    QUANTIFY_PSEUDO_ALIGNMENT(
-        ch_samplesheet,
-        SAMTOOLS_BAM2FQ.out.reads,
-        params.transcripts_index,
-        params.transcripts_fasta,
-        params.transcripts_gtf,
-        params.gtf_id_attribute,
-        params.gtf_extra_attribute,
-        params.pseudo_aligner,
-        false,
-        params.salmon_quant_libtype,
+
+    //
+    // Prepare index channel (KALLISTO_QUANT expects tuple for index)
+    //
+    ch_index = Channel.value([[:], file(params.transcripts_index)])
+
+    //
+    // Quantify with kallisto
+    //
+    KALLISTO_QUANT(
+        ch_reads,
+        ch_index,
+        [],
+        [],
         params.kallisto_quant_fraglen,
         params.kallisto_quant_fraglen_sd,
     )
-    ch_multiqc_files = ch_multiqc_files.mix(QUANTIFY_PSEUDO_ALIGNMENT.out.multiqc.collect { _meta, multiqc -> multiqc })
-    ch_versions = ch_versions.mix(QUANTIFY_PSEUDO_ALIGNMENT.out.versions)
+    ch_multiqc_files = ch_multiqc_files.mix(KALLISTO_QUANT.out.log.collect { _meta, multiqc -> multiqc })
     //
     // Collate and save software versions
     //

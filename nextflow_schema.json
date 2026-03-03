@@ -255,16 +255,6 @@
         }
     ],
     "properties": {
-        "gtf_id_attribute": {
-            "type": "string",
-            "default": "gene_id",
-            "description": "Gene ID attribute in the GTF file"
-        },
-        "gtf_extra_attribute": {
-            "type": "string",
-            "default": "gene_name",
-            "description": "Extra gene attribute in the GTF file"
-        },
         "kallisto_quant_fraglen": {
             "type": "integer",
             "default": 200,
@@ -275,26 +265,9 @@
             "default": 200,
             "description": "In single-end mode, Kallisto requires an estimated standard error for fragment length"
         },
-        "pseudo_aligner": {
-            "type": "string",
-            "default": "kallisto",
-            "description": "Pseudo aligner method (kallisto or salmon)"
-        },
-        "salmon_quant_libtype": {
-            "type": "string",
-            "description": "Refer to the [Salmon documentation](https://salmon.readthedocs.io/en/latest/library_type.html) for details on library types"
-        },
         "transcripts_index": {
             "type": "string",
             "description": "path to pre-build transcriptome index for pseudoalignment"
-        },
-        "transcripts_fasta": {
-            "type": "string",
-            "description": "path to cDNA fasta file for transcriptome"
-        },
-        "transcripts_gtf": {
-            "type": "string",
-            "description": "path to transcriptome gtf file"
         }
     }
 }
