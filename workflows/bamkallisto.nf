@@ -40,9 +40,11 @@ workflow BAMKALLISTO {
     //
     // MODULE: Run FastQC
     //
-    FASTQC(SAMTOOLS_COLLATEFASTQ.out.fastq)
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect { it[1] })
-    ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+    if (!params.skip_fastqc) {
+        FASTQC(SAMTOOLS_COLLATEFASTQ.out.fastq)
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect { it[1] })
+        ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+    }
 
     //
     // Prepare index channel (KALLISTO_QUANT expects tuple for index)
