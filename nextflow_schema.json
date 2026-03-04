@@ -253,5 +253,37 @@
         {
             "$ref": "#/$defs/generic_options"
         }
-    ]
+    ],
+    "properties": {
+        "kallisto_quant_fraglen": {
+            "type": "integer",
+            "default": 200,
+            "description": "In single-end mode Kallisto requires an estimated fragment length. Specify a default value for that here"
+        },
+        "kallisto_quant_fraglen_sd": {
+            "type": "integer",
+            "default": 200,
+            "description": "In single-end mode, Kallisto requires an estimated standard error for fragment length"
+        },
+        "transcripts_index": {
+            "type": "string",
+            "description": "path to pre-build transcriptome index for pseudoalignment"
+        },
+        "gtf": {
+            "type": "string",
+            "description": "if you need to build transcriptome index, path to transcriptome gtf"
+        },
+        "genome_fasta": {
+            "type": "string",
+            "description": "if you need to build transcriptome index, path to ref genome fasta to extract cDNA fasta"
+        },
+        "transcripts_fasta": {
+            "type": "string",
+            "description": "if you need to build transcriptome index, and already have cDNA fasta"
+        },
+        "skip_fastqc": {
+            "type": "boolean",
+            "description": "skip fastqc"
+        }
+    }
 }
