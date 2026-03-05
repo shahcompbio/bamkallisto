@@ -284,6 +284,34 @@
         "skip_fastqc": {
             "type": "boolean",
             "description": "skip fastqc"
+        },
+        "pseudo_aligner": {
+            "type": "string",
+            "default": "kallisto",
+            "description": "Specifies the pseudo aligner to use - available options are 'kallisto' or 'salmon'"
+        },
+        "salmon_quant_libtype": {
+            "type": "string",
+            "description": "Override Salmon library type inferred based on strandedness defined in meta object"
+        },
+        "gtf_id_attribute": {
+            "type": "string",
+            "default": "gene_id",
+            "description": "Gene ID attribute in the GTF file"
+        },
+        "gtf_extra_attribute": {
+            "type": "string",
+            "default": "gene_name",
+            "description": "Extra gene attribute in the GTF file"
+        },
+        "extra_kallisto_quant_args": {
+            "type": "string",
+            "default": "-b 100",
+            "description": "extra args for kallisto (default runs bootstrapping with 100 reps)"
+        },
+        "extra_salmon_quant_args": {
+            "type": "string",
+            "description": "extra args for salmon (if run)"
         }
     }
 }
