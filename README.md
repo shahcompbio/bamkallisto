@@ -18,7 +18,8 @@ The pipeline performs the following steps:
 1. Convert transcriptome BAMs to paired-end FASTQs ([`samtools collate/fastq`](http://www.htslib.org/doc/samtools.html))
 2. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
 3. Pseudoalignment and transcript quantification ([`kallisto quant`](https://pachterlab.github.io/kallisto/manual))
-4. Aggregate QC report ([`MultiQC`](http://multiqc.info/))
+4. Gene-level summarization via tximport
+5. Aggregate QC report ([`MultiQC`](http://multiqc.info/))
 
 ```
 samplesheet.csv
@@ -91,17 +92,21 @@ For more details, see the [usage documentation](docs/usage.md) and the [output d
 
 ## Parameters
 
-| Parameter                     | Description                                          | Default  |
-| ----------------------------- | ---------------------------------------------------- | -------- |
-| `--input`                     | Path to samplesheet CSV                              | required |
-| `--transcripts_index`         | Path to pre-built kallisto index                     | -        |
-| `--transcripts_fasta`         | Path to transcriptome FASTA (builds index)           | -        |
-| `--gtf`                       | Path to GTF annotation (used with `--genome_fasta`)  | -        |
-| `--genome_fasta`              | Path to genome FASTA (used with `--gtf`)             | -        |
-| `--outdir`                    | Output directory                                     | required |
-| `--skip_fastqc`               | Skip FastQC step                                     | `false`  |
-| `--kallisto_quant_fraglen`    | Estimated fragment length (single-end mode)          | `200`    |
-| `--kallisto_quant_fraglen_sd` | Fragment length standard deviation (single-end mode) | `200`    |
+| Parameter                     | Description                                          | Default     |
+| ----------------------------- | ---------------------------------------------------- | ----------- |
+| `--input`                     | Path to samplesheet CSV                              | required    |
+| `--transcripts_index`         | Path to pre-built kallisto index                     | -           |
+| `--transcripts_fasta`         | Path to transcriptome FASTA (builds index)           | -           |
+| `--gtf`                       | Path to GTF annotation (used with `--genome_fasta`)  | -           |
+| `--genome_fasta`              | Path to genome FASTA (used with `--gtf`)             | -           |
+| `--outdir`                    | Output directory                                     | required    |
+| `--skip_fastqc`               | Skip FastQC step                                     | `false`     |
+| `--pseudo_aligner`            | Pseudoaligner to use ('kallisto' or 'salmon')        | `kallisto`  |
+| `--gtf_id_attribute`          | Gene ID attribute in GTF                             | `gene_id`   |
+| `--gtf_extra_attribute`       | Extra gene attribute in GTF                          | `gene_name` |
+| `--kallisto_quant_fraglen`    | Estimated fragment length (single-end mode)          | `200`       |
+| `--kallisto_quant_fraglen_sd` | Fragment length standard deviation (single-end mode) | `200`       |
+| `--extra_kallisto_quant_args` | Extra args for kallisto (e.g., '-b 100')             | `-b 100`    |
 
 One of `--transcripts_index`, `--transcripts_fasta`, or `--gtf` + `--genome_fasta` must be provided.
 

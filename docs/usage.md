@@ -58,6 +58,24 @@ Provide a GTF annotation and genome FASTA. The pipeline will extract cDNA sequen
 --gtf /path/to/annotation.gtf --genome_fasta /path/to/genome.fasta
 ```
 
+## Pseudoaligner selection
+
+The pipeline supports both kallisto and salmon for pseudoalignment. Use `--pseudo_aligner` to choose:
+
+```bash
+--pseudo_aligner kallisto  # default
+--pseudo_aligner salmon
+```
+
+### GTF attributes for gene-level summarization
+
+When using gene-level quantification, specify the GTF attributes to use:
+
+```bash
+--gtf_id_attribute gene_id     # default
+--gtf_extra_attribute gene_name # default
+```
+
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:

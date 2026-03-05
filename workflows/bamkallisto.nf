@@ -3,16 +3,16 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { SAMTOOLS_COLLATEFASTQ  } from '../modules/nf-core/samtools/collatefastq/main'
-include { FASTQC                 } from '../modules/nf-core/fastqc/main'
-include { GFFREAD                } from '../modules/nf-core/gffread/main'
-include { KALLISTO_INDEX         } from '../modules/nf-core/kallisto/index/main'
-include { KALLISTO_QUANT         } from '../modules/nf-core/kallisto/quant/main'
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_bamkallisto_pipeline'
+include { SAMTOOLS_COLLATEFASTQ     } from '../modules/nf-core/samtools/collatefastq/main'
+include { FASTQC                    } from '../modules/nf-core/fastqc/main'
+include { GFFREAD                   } from '../modules/nf-core/gffread/main'
+include { KALLISTO_INDEX            } from '../modules/nf-core/kallisto/index/main'
+include { QUANTIFY_PSEUDO_ALIGNMENT } from '../subworkflows/nf-core/quantify_pseudo_alignment/main'
+include { MULTIQC                   } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap          } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText    } from '../subworkflows/local/utils_nfcore_bamkallisto_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -52,7 +52,7 @@ workflow BAMKALLISTO {
     ch_index = channel.empty()
     if (params.transcripts_index) {
         // Use pre-built kallisto index
-        ch_index = Channel.value([[:], file(params.transcripts_index)])
+        ch_index = channel.value([[:], file(params.transcripts_index)])
     }
     else if (params.transcripts_fasta) {
         // Build index from transcriptome FASTA
@@ -66,17 +66,34 @@ workflow BAMKALLISTO {
         ch_index = KALLISTO_INDEX.out.index
     }
     //
-    // Quantify with kallisto
+    // Prepare channels for QUANTIFY_PSEUDO_ALIGNMENT
     //
-    KALLISTO_QUANT(
+    ch_samplesheet_file = channel.fromPath(params.input)
+        .map { path -> [[:], path] }
+    ch_gtf = channel.value(file(params.gtf))
+    ch_transcript_fasta = params.transcripts_fasta
+        ? channel.value(file(params.transcripts_fasta))
+        : channel.value([])
+
+    //
+    // Quantify with kallisto + tximport gene-level summarization
+    //
+    QUANTIFY_PSEUDO_ALIGNMENT(
+        ch_samplesheet_file,
         SAMTOOLS_COLLATEFASTQ.out.fastq,
         ch_index,
-        [],
-        [],
+        ch_transcript_fasta,
+        ch_gtf,
+        params.gtf_id_attribute,
+        params.gtf_extra_attribute,
+        params.pseudo_aligner,
+        false,
+        params.salmon_quant_libtype,
         params.kallisto_quant_fraglen,
         params.kallisto_quant_fraglen_sd,
     )
-    ch_multiqc_files = ch_multiqc_files.mix(KALLISTO_QUANT.out.log.collect { _meta, multiqc -> multiqc })
+    ch_multiqc_files = ch_multiqc_files.mix(QUANTIFY_PSEUDO_ALIGNMENT.out.multiqc.collect { _meta, multiqc -> multiqc })
+    ch_versions = ch_versions.mix(QUANTIFY_PSEUDO_ALIGNMENT.out.versions)
     //
     // Collate and save software versions
     //
