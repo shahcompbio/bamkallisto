@@ -13,6 +13,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - [SAMTOOLS_COLLATEFASTQ](#samtools_collatefastq) - BAM to FASTQ conversion
 - [FastQC](#fastqc) - Raw read QC
 - [kallisto quant](#kallisto-quant) - Transcript quantification
+- [tximport](#tximport) - Gene-level summarization
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
@@ -49,6 +50,19 @@ This step can be skipped with `--skip_fastqc`.
 </details>
 
 [kallisto](https://pachterlab.github.io/kallisto/) performs pseudoalignment of reads to a transcriptome index and quantifies transcript abundances. By default, the pipeline runs with 100 bootstrap samples (`-b 100`) to enable downstream uncertainty-aware analyses (e.g., with [sleuth](https://pachterlab.github.io/sleuth/)).
+
+### tximport
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `gene_counts/`
+  - `gene_count_lengths.tsv`: Gene-level counts and effective lengths
+  - `gene_TPM.tsv`: Gene-level TPM values
+
+</details>
+
+[tximport](https://bioconductor.org/packages/release/bioc/html/tximport.html) summarizes transcript-level abundances to gene-level counts. This requires a GTF file with gene annotations (specified via `--gtf`).
 
 ### MultiQC
 
